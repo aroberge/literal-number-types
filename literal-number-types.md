@@ -17,6 +17,8 @@ The main reasons given for not going supporting having decimals instead of float
 * calculations performed with decimals are much slower than those with floats
 * the ability to prototype float point based calculations in Python and, if needed for speed, translate to C or Fortran without needing to worry about the type.
   * related to this, interoperability with existing Fortran or C libraries (for example, with `numpy`) essentially require the use of floats.
+* while the precision for decimals is configurable, its API is rather complex which contradict the idea that decimals would be friendlier to beginners than normal binary floats.
+* Unlike other number types, including `fractions.Fraction`, there is no implicit conversion of decimals to floats when they are combined.
 
 Finally, it is unclear that the need of decimals is really wide spread. A possible indicator might be having a large number of people regularly including something like
 
@@ -122,19 +124,52 @@ A very brief tread [float vs decimal](https://mail.python.org/archives/list/pyth
 
 ## Sept 2012
 
-https://mail.python.org/archives/list/python-ideas@python.org/thread/3IQDAQGVMPJBJRJXJUETAXJ2HE6AHFNL/ apparently refers to a discussion on python-dev
+[A brief thread](https://mail.python.org/archives/list/python-ideas@python.org/thread/3IQDAQGVMPJBJRJXJUETAXJ2HE6AHFNL/) [5 comments, 5 participants], that had apparently started on python-dev, spilled over October.
 
-## Oct 2012
+[Calvin Spealman wrote](https://mail.python.org/archives/list/python-ideas@python.org/message/7TAOGNAQC6B2ASNHUNY3QH574JLBUHBN/)
 
-Continuation of previous discussion https://mail.python.org/archives/list/python-ideas@python.org/thread/3IQDAQGVMPJBJRJXJUETAXJ2HE6AHFNL/ ... needs to be summarize
+>  I think learning Integer -> Decimal -> Float is a lot more natural than learning Integer -> Float -> Decimal. The Float type represents a specific hardware acceleration with data-loss tradeoffs, and the use should be explicit. I think that as someone learns, the limitations of Decimals will make a lot more sense than those of Floats.
+
+This was countered by [Guido van Rossum](https://mail.python.org/archives/list/python-ideas@python.org/message/4UIEBMKG4UCKKIVHK73HSG5XH462FOTF/) as follows:
+
+> Remember decimals have data loss too: they can't represent 1/3 any more accurately than floats can, and like floats they are limited to a certain number of digits after which they begin dropping precision even if the result *can* be represented exactly. It's just that they can represent 1/5 exactly, which happens to be culturally important to humans, and that the number of digits at which loss of precision happens is configurable. (And the API to configure it may actually make it more complex to learn.)
 
 
 
 ## August 2013
 
-Threads about [isinstance(Decimal(), Real) -> False?](https://mail.python.org/archives/list/python-ideas@python.org/thread/KOE3MQ5NSMGTLIH6IHAQWTIOELXG4AFQ/); [second thread](https://mail.python.org/archives/list/python-ideas@python.org/thread/BTBJE3DDSYQKOGA3JEGPQTRFLRNJVMSA/) which might contain relevant points about incompatibility of decimals and other floats.  In particular, [Oscar Benjamin wrote](https://mail.python.org/archives/list/python-ideas@python.org/message/SMR7MLB6WBF2IMT6DJYPSRYHVDSRQMLL/):
+The discussion started by Oscar Benjamin [isinstance(Decimal(), Real) -> False?](https://mail.python.org/archives/list/python-ideas@python.org/thread/KOE3MQ5NSMGTLIH6IHAQWTIOELXG4AFQ/) [13 comments, 8 participants] is shown with a separate [second thread](https://mail.python.org/archives/list/python-ideas@python.org/thread/BTBJE3DDSYQKOGA3JEGPQTRFLRNJVMSA/) [17 comments, 6 participants] which contains relevant points about incompatibility of decimals and other floats.  
+
+The firs thread started with this observation by Oscar Benjamin found in [PEP 3141](https://www.python.org/dev/peps/pep-3141/#the-decimal-type):
+
+> After consultation with its authors it has been decided that the `Decimal` type should not at this time be made part of the numeric tower.
+
+After a few comments, we find this observation by [Paul Moore](https://mail.python.org/archives/list/python-ideas@python.org/message/JVWSSDH5A7HIYTKSVKRWAU2KHEWDHE5B/)
+
+> The difference is that there is no implicit conversion from Decimal to float:
+```python
+>  from decimal import Decimal as D
+> D('1.5') + 2.3
+> Traceback (most recent call last):
+> File "<stdin>", line 1, in <module>
+>   TypeError: unsupported operand type(s) for +: 'Decimal' and 'float'
+> from fractions import Fraction as F
+> F(1,2) + 2.3
+> 2.8
+> ```
+
+Eventually, [Oscar Benjamin noted](https://mail.python.org/archives/list/python-ideas@python.org/message/SMR7MLB6WBF2IMT6DJYPSRYHVDSRQMLL/):
 
 > Decimals are effectively stored internally as integers. They won't be processed by the FPU which operates on binary floating point types.
+
+These two related threads contain many long comments that may be relevant to those interested in mathematical details between representations and handling of floats vs decimals in Python. Here's an attempt at an utterly incomplete and very selective summary of two main points (**with apologies for giving proper attributions**):
+
+* normal (binary) floats are approximations of real numbers using base 2 with an implicit precision, (by using fixed number of decimals), which matches the architecture of modern CPUs.  ["Practicality beats purity."]
+* decimals are approximations of real numbers using base 10, with a default precision (fixed number of decimals) which can be modified by specifying a given "context". Older CPUS, such as CPUs like the Intel 4004 and the IBM 360 expected to do most of their work in Binary Coded Decimal.
+
+On the topic of "context", as noted by [Oscar Benjamin](https://mail.python.org/archives/list/python-ideas@python.org/message/GMJK3G3N4UEJ4K4WRPDPERR4YBM2UWOQ/):
+
+> While it is possible to exactly convert an `int/str/float` to a `Decimal` with a precision that is higher than the current context, any arithmetic operations will be rounded to the context precision according to the context rounding mode (there are 8 different rounding modes and precision is any positive integer). This arithmetic rounding is actually *required* by the IEEE-854 standard unlike the exact conversion from arbitrary precision integers etc.
 
 
 

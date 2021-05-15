@@ -156,7 +156,7 @@ After a few comments, we find this observation by [Paul Moore](https://mail.pyth
 > from fractions import Fraction as F
 > F(1,2) + 2.3
 > 2.8
-> ```
+```
 
 Eventually, [Oscar Benjamin noted](https://mail.python.org/archives/list/python-ideas@python.org/message/SMR7MLB6WBF2IMT6DJYPSRYHVDSRQMLL/):
 
